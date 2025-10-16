@@ -83,6 +83,18 @@ struct Declaration: ExpressibleByStringLiteral, Sendable {
         access("fileprivate")
     }
 
+    // MARK: Attributes
+
+    func discardableResult(_ shouldAdd: Bool) -> Declaration {
+        guard shouldAdd else {
+            return self
+        }
+
+        var copy = self
+        copy.text = "@discardableResult \(text)"
+        return copy
+    }
+
     // MARK: SwiftSyntax conversion
 
     func declSyntax() -> DeclSyntax {

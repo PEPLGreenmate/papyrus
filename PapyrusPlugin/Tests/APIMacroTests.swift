@@ -68,6 +68,61 @@ final class APIMacroTests: XCTestCase {
             """
         }
     }
+  
+    func testDiscardableResult() {
+        assertMacro(["API": APIMacro.self]) {
+            """
+            @API
+            public protocol Foo {
+                @discardableResult
+                @GET("/bar")
+                public func bar() async throws -> Bool
+            
+                @discardableResult
+                @POST("/baz")
+                public func baz() async throws -> String
+            }
+            """
+      } expansion: {
+            """
+            public protocol Foo {
+                @discardableResult
+                @GET("/bar")
+                public func bar() async throws -> Bool
+            
+                @discardableResult
+                @POST("/baz")
+                public func baz() async throws -> String
+            }
+
+            public struct FooAPI: Foo {
+                private let provider: Papyrus.Provider
+
+                public init(provider: Papyrus.Provider) {
+                    self.provider = provider
+                }
+
+                @discardableResult public func bar() async throws -> Bool {
+                    var req = builder(method: "GET", path: "/bar")
+                    let res = try await self.provider.request(&req)
+                    try res.validate()
+                    return try res.decode(Bool.self, using: req.responseBodyDecoder)
+                }
+            
+                @discardableResult public func baz() async throws -> String {
+                    var req = builder(method: "POST", path: "/baz")
+                    let res = try await self.provider.request(&req)
+                    try res.validate()
+                    return try res.decode(String.self, using: req.responseBodyDecoder)
+                }
+
+                private func builder(method: String, path: String) -> Papyrus.RequestBuilder {
+                    provider.newBuilder(method: method, path: path)
+                }
+            }
+            """
+      }
+  }
 
     func testJSONDecoderOnly() {
         assertMacro(["API": APIMacro.self]) {

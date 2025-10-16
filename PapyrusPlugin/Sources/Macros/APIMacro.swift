@@ -31,7 +31,7 @@ extension API {
             // 1. live endpoint implementations
 
             for endpoint in endpoints {
-                endpoint.liveFunction().access(access)
+                endpoint.liveFunction().access(access).discardableResult(endpoint.discardableResult)
             }
 
             // 2. builder used by all live endpoint functions

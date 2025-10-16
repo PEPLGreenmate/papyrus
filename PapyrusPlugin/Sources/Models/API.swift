@@ -12,6 +12,8 @@ struct API {
         let name: String
         let parameters: [EndpointParameter]
         let responseType: String?
+        /// Whether the function has @discardableResult attribute
+        let discardableResult: Bool
     }
 
     /// The name of the protocol defining the API.
@@ -53,6 +55,8 @@ extension API {
         }
 
         let (method, path, pathParameters) = try parseMethodAndPath(function)
+        let hasDiscardableResult = function.functionAttributes.contains { $0.name == "discardableResult" }
+
         return API.Endpoint(
             attributes: function.functionAttributes.compactMap { EndpointAttribute($0) },
             method: method,
@@ -62,7 +66,8 @@ extension API {
             parameters: try function.parameters.compactMap {
                 EndpointParameter($0, httpMethod: method, pathParameters: pathParameters)
             }.validated(),
-            responseType: function.returnType
+            responseType: function.returnType,
+            discardableResult: hasDiscardableResult
         )
     }
 
